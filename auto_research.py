@@ -61,9 +61,15 @@ class AutoResearchAgent:
         
         # 自定义日志函数
         def log(message):
-            print(message, file=sys.stdout)
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # 日志文件中的格式：包含时间戳
+            log_message = f"[{timestamp}] {message}"
+            # 终端输出的格式：添加 AutoResearch 前缀，更加醒目
+            terminal_message = f"[AutoResearch] {log_message}"
+            print(terminal_message, file=sys.stdout)
             with open(log_file, "a", encoding="utf-8") as f:
-                f.write(message + "\n")
+                f.write(log_message + "\n")
         
         # 第一步：让千问根据当前工况提出 3 个优化假设
         log("[PROCESS] 第一步：让千问根据当前工况提出 3 个优化假设...")

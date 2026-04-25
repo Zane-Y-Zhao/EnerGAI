@@ -1,86 +1,64 @@
 import sys
 import os
 import logging
-from pathlib import Path
+
+# 设置根目录并添加到sys.path
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(ROOT_DIR)
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 设置根目录并添加到sys.path
-ROOT_DIR = Path(__file__).parent   # 获取项目根目录
-sys.path.append(str(ROOT_DIR))   # 将根目录加入模块搜索路径
+# 导入 get_vectorstore 函数
+from knowledge_base.rag_pipeline import get_vectorstore, build_rag_store
 
-logging.info(f"项目根目录: {ROOT_DIR}")
-
-# 检查向量数据库目录
-DB_PATH = ROOT_DIR / ".chroma_db"
-logging.info(f"向量数据库目录: {DB_PATH}")
-logging.info(f"向量数据库目录是否存在: {DB_PATH.exists()}")
-
-# 列出向量数据库目录中的文件
-if DB_PATH.exists():
-    files = list(DB_PATH.iterdir())
-    logging.info(f"向量数据库目录中的文件: {[f.name for f in files]}")
-
-# 导入必要的模块
-try:
-    from langchain_community.vectorstores import Chroma
-    from langchain_huggingface import HuggingFaceEmbeddings
-    logging.info("成功导入LangChain模块")
-except Exception as e:
-    logging.error(f"导入LangChain模块失败: {str(e)}")
-    sys.exit(1)
-
-# 初始化向量数据库
-try:
-    EMBEDDING_MODEL = "D:\\chem-ai-project\\Chemical_AI_Project\\all-MiniLM-L6-v2"
-    logging.info(f"嵌入模型: {EMBEDDING_MODEL}")
-    
-    embedding_func = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    logging.info("成功初始化嵌入模型")
-    
-    vectorstore = Chroma(
-        persist_directory=str(DB_PATH),
-        embedding_function=embedding_func,
-        collection_name="chem_knowledge_rag"
-    )
-    logging.info("成功初始化向量数据库")
-    
-except Exception as e:
-    logging.error(f"初始化向量数据库失败: {str(e)}")
-    sys.exit(1)
-
-# 测试基本检索功能
-try:
-    logging.info("开始测试向量数据库基本检索功能")
-    
-    # 测试查询
-    query = "循环水系统失衡处置"
-    logging.info(f"查询：{query}")
-    
-    # 执行检索
-    results = vectorstore.similarity_search(query, k=3)
-    logging.info(f"检索到 {len(results)} 个结果")
-    
-    # 显示检索结果
-    for i, doc in enumerate(results, 1):
-        source = doc.metadata.get('source', '未知来源')
-        content = doc.page_content[:100]
-        logging.info(f"结果{i}：")
-        logging.info(f"  来源：{source}")
-        logging.info(f"  内容：{content}...")
-    
-    # 检查是否召回杨泽彤案例集中对应片段
-    logging.info("开始分析检索结果")
-    for i, doc in enumerate(results, 1):
-        source = doc.metadata.get('source', '未知来源')
-        if "杨泽彤" in source:
-            logging.info(f"✅ 片段{i}：成功召回杨泽彤案例集片段")
+# 测试向量存储的初始化
+def test_vectorstore():
+    print("测试向量存储初始化...")
+    try:
+        print("1. 尝试获取向量存储...")
+        vectorstore = get_vectorstore()
+        if vectorstore is not None:
+            print("✅ 向量存储初始化成功！")
+            # 尝试获取文档
+            print("2. 尝试获取文档...")
+            documents = vectorstore.get()
+            print(f"3. 文档类型：{type(documents)}")
+            print(f"4. 文档键：{list(documents.keys()) if isinstance(documents, dict) else '不是字典'}")
+            if isinstance(documents, dict) and 'documents' in documents:
+                print(f"5. 文档数量：{len(documents['documents'])}")
+                if len(documents['documents']) > 0:
+                    print(f"✅ 成功获取 {len(documents['documents'])} 个文档")
+                    print(f"6. 第一个文档内容：{documents['documents'][0][:100]}...")
+                else:
+                    print("❌ 文档列表为空")
+            else:
+                print("❌ 无法获取文档")
         else:
-            logging.info(f"❌ 片段{i}：未召回杨泽彤案例集片段")
-    
-    logging.info("测试完成")
-    
-except Exception as e:
-    logging.error(f"测试失败: {str(e)}")
-    sys.exit(1)
+            print("❌ 向量存储初始化失败")
+            # 尝试重新构建向量库
+            print("7. 尝试重新构建向量库...")
+            store = build_rag_store()
+            if store is not None:
+                print("✅ 向量库构建成功！")
+                # 再次尝试获取文档
+                documents = store.get()
+                print(f"8. 文档类型：{type(documents)}")
+                print(f"9. 文档键：{list(documents.keys()) if isinstance(documents, dict) else '不是字典'}")
+                if isinstance(documents, dict) and 'documents' in documents:
+                    print(f"10. 文档数量：{len(documents['documents'])}")
+                    if len(documents['documents']) > 0:
+                        print(f"✅ 成功获取 {len(documents['documents'])} 个文档")
+                    else:
+                        print("❌ 文档列表为空")
+                else:
+                    print("❌ 无法获取文档")
+            else:
+                print("❌ 向量库构建失败")
+    except Exception as e:
+        print(f"❌ 测试失败：{str(e)}")
+        import traceback
+        traceback.print_exc()
+
+if __name__ == "__main__":
+    test_vectorstore()

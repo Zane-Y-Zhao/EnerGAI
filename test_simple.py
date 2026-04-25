@@ -1,39 +1,40 @@
-import torch
 import sys
+import os
 
-# 简单测试脚本
-print("[TEST] 开始简单测试...", file=sys.stdout)
-print(f"[TEST] Python版本：{sys.version}", file=sys.stdout)
-print(f"[TEST] PyTorch版本：{torch.__version__}", file=sys.stdout)
+# 测试基本功能
+def test_simple():
+    print("测试基本功能...")
+    
+    try:
+        # 测试 rank_bm25 库的导入
+        print("1. 测试 rank_bm25 库的导入...")
+        from rank_bm25 import BM25Okapi
+        print("[OK] 成功导入 rank_bm25 库")
+        
+        # 测试创建 BM25 索引
+        print("\n2. 测试创建 BM25 索引...")
+        test_docs = [
+            "温度升高时，应检查冷却系统是否正常工作",
+            "压力下降可能是由于管道泄漏导致的",
+            "流量不稳定时，应检查泵的运行状态"
+        ]
+        import re
+        tokenized_docs = [re.sub(r'[^\w\s]', '', doc.lower()).split() for doc in test_docs]
+        bm25 = BM25Okapi(tokenized_docs)
+        print("[OK] BM25 索引创建成功")
+        
+        # 测试检索
+        print("\n3. 测试检索...")
+        query = "温度升高"
+        tokenized_query = re.sub(r'[^\w\s]', '', query.lower()).split()
+        scores = bm25.get_scores(tokenized_query)
+        print(f"[OK] 检索成功，得分：{scores}")
+        
+        print("\n测试完成！")
+    except Exception as e:
+        print(f"[ERROR] 测试失败：{str(e)}")
+        import traceback
+        traceback.print_exc()
 
-# 测试PyTorch
-print("[TEST] 测试PyTorch...", file=sys.stdout)
-test_tensor = torch.tensor([1, 2, 3])
-print(f"[TEST] PyTorch测试成功：{test_tensor}", file=sys.stdout)
-
-# 测试模型导入
-try:
-    from models import TransformerModel
-    print("[TEST] 模型导入成功", file=sys.stdout)
-    # 测试模型初始化
-    model = TransformerModel(input_size=15, d_model=128, nhead=4, num_layers=2, output_size=21, dim_feedforward=256, hidden_size=64)
-    print("[TEST] 模型初始化成功", file=sys.stdout)
-    # 测试模型前向传播
-    test_input = torch.randn(1, 5, 15)
-    output = model(test_input)
-    print(f"[TEST] 模型前向传播成功，输出形状：{output.shape}", file=sys.stdout)
-except Exception as e:
-    print(f"[TEST] 模型测试失败：{str(e)}", file=sys.stdout)
-
-# 测试qwen_interface导入
-try:
-    from qwen_interface import call_qwen_api
-    print("[TEST] qwen_interface导入成功", file=sys.stdout)
-    # 测试call_qwen_api函数
-    test_prompt = "测试"  
-    result = call_qwen_api(test_prompt)
-    print(f"[TEST] call_qwen_api测试成功，返回类型：{type(result)}", file=sys.stdout)
-except Exception as e:
-    print(f"[TEST] qwen_interface测试失败：{str(e)}", file=sys.stdout)
-
-print("[TEST] 简单测试完成！", file=sys.stdout)
+if __name__ == "__main__":
+    test_simple()

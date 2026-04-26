@@ -4,8 +4,6 @@ import time
 from dotenv import load_dotenv
 from dashscope import Generation
 
-load_dotenv()  # 加载.env文件
-API_KEY = os.getenv("DASHSCOPE_API_KEY")
 MODEL_NAME = "qwen-max"  # 生产环境使用max版保障复杂推理能力
 
 def call_qwen(prompt: str) -> str:
@@ -13,6 +11,35 @@ def call_qwen(prompt: str) -> str:
     print(f"[DEBUG] 开始调用大模型，prompt: {prompt[:50]}...")
     start_time = time.time()
     try:
+        # 从.env文件直接读取API_KEY
+        from pathlib import Path
+        env_path = Path(__file__).parent.parent / ".env"
+        API_KEY = None
+        
+        print(f"[DEBUG] 尝试读取.env文件：{env_path}")
+        print(f"[DEBUG] .env文件是否存在：{env_path.exists()}")
+        
+        if env_path.exists():
+            print(f"[DEBUG] 打开.env文件")
+            with open(env_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                print(f"[DEBUG] .env文件行数：{len(lines)}")
+                for i, line in enumerate(lines, 1):
+                    line = line.strip()
+                    print(f"[DEBUG] 第{i}行：{line}")
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        print(f"[DEBUG] 解析：key={key.strip()}, value={value.strip()}")
+                        if key.strip() == "DASHSCOPE_API_KEY":
+                            API_KEY = value.strip()
+                            print(f"[DEBUG] 找到API_KEY：{API_KEY[:10]}...")
+                            break
+        
+        print(f"[DEBUG] 最终API_KEY：{API_KEY}")
+        
+        if not API_KEY:
+            raise Exception("API_KEY not found in .env file")
+            
         print(f"[DEBUG] API_KEY: {API_KEY[:10]}...")
         print(f"[DEBUG] MODEL_NAME: {MODEL_NAME}")
         

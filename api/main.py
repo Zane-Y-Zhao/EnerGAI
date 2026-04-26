@@ -285,7 +285,15 @@ def init_vectorstore():
                     tokenized_docs = [re.sub(r'[^\w\s]', '', doc.lower()).split() for doc in documents['documents']]
                     bm25_index = BM25Okapi(tokenized_docs)
                     print(f"BM25索引初始化完成，包含{len(documents['documents'])}个文档")
+                else:
+                    # 文档为空时，设置bm25_index为None
+                    bm25_index = None
+                    documents = []
+                    print("文档为空，无法构建BM25索引")
             else:
+                # 向量数据库未初始化时，设置bm25_index为None
+                bm25_index = None
+                documents = []
                 print("向量数据库未初始化，无法构建BM25索引")
         
         return vectorstore

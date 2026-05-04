@@ -32,7 +32,7 @@ export class DashboardView {
                 <!-- 头部 -->
                 <div class="header">
                     <div class="header-left">
-                        <h1>化工余热智能管理系统</h1>
+                        <h1>EnerGAI</h1>
                         <div class="tooltip">
                             <button class="action-btn execute" onclick="dashboard.exportToCSV()">导出CSV</button>
                             <span class="tooltip-text">导出当前数据为CSV文件</span>
